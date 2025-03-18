@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokédex</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            max-width: 90%;
+        }
+        .pokedex-title {
+            margin-bottom: 20px;
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+        input[type="text"] {
+            padding: 10px;
+            width: calc(100% - 22px);
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .pokemon-card {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            text-align: left;
+            background-color: #f9f9f9;
+        }
+        .pokemon-card img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+        .pokemon-card h2 {
+            margin: 0;
+            font-size: 1.5em;
+            color: #007BFF;
+        }
+        .pokemon-card ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .pokemon-card li {
+            margin: 5px 0;
+            color: #333;
+        }
+        .error-message {
+            color: #ff4d4d;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="/img/logo.svg" alt="Pokédex Logo" class="pokedex-title">
+        <input type="text" id="pokemonInput" placeholder="Ingresa el nombre o número del Pokémon">
+        <button onclick="searchPokemon()">Buscar</button>
+        <div id="pokemonResult"></div>
+    </div>
+
+    <script>
+        async function searchPokemon() {
+            const pokemonName = document.getElementById('pokemonInput').value.trim().toLowerCase();
+            if (!pokemonName) {
+                document.getElementById('pokemonResult').innerHTML = '<p class="error-message">Por favor, ingresa el nombre o número de un Pokémon.</p>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonName}`);
+                if (!response.ok) {
+                    throw new Error('No se pudo encontrar el Pokémon.');
+                }
+                const data = await response.json();
+
+                // Crear la tarjeta del Pokémon
+                const card = document.createElement('div');
+                card.className = 'pokemon-card';
+
+                // Imagen del Pokémon
+                const img = document.createElement('img');
+                img.src = data.sprites.other['official-artwork'].front_default || data.sprites.front_default;
+                card.appendChild(img);
+
+                // Nombre del Pokémon
+                const name = document.createElement('h2');
+                name.textContent = `Nombre: ${data.name}`;
+                card.appendChild(name);
+
+                // Habilidades del Pokémon
+                const abilitiesTitle = document.createElement('p');
+                abilitiesTitle.textContent = 'Habilidades:';
+                abilitiesTitle.style.fontWeight = 'bold';
+                card.appendChild(abilitiesTitle);
+
+                const abilities = document.createElement('ul');
+                data.abilities.forEach(ability => {
+                    const li = document.createElement('li');
+                    li.textContent = ability.ability.name;
+                    abilities.appendChild(li);
+                });
+                card.appendChild(abilities);
+
+                // Poderes (stats) del Pokémon
+                const statsTitle = document.createElement('p');
+                statsTitle.textContent = 'Estadísticas:';
+                statsTitle.style.fontWeight = 'bold';
+                card.appendChild(statsTitle);
+
+                const stats = document.createElement('ul');
+                data.stats.forEach(stat => {
+                    const li = document.createElement('li');
+                    li.textContent = `${stat.stat.name}: ${stat.base_stat}`;
+                    stats.appendChild(li);
+                });
+                card.appendChild(stats);
+
+                // Mostrar la tarjeta
+                document.getElementById('pokemonResult').innerHTML = '';
+                document.getElementById('pokemonResult').appendChild(card);
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('pokemonResult').innerHTML = '<p class="error-message">No se pudo encontrar el Pokémon.</p>';
+            } finally {
+                // Limpiar el campo de entrada después de la búsqueda
+                document.getElementById('pokemonInput').value = '';
+            }
+        }
+    </script>
+</body>
+</html>
